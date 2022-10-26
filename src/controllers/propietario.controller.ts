@@ -1,3 +1,4 @@
+import {service} from '@loopback/core';
 import {
   Count,
   CountSchema,
@@ -10,14 +11,21 @@ import {
   getModelSchemaRef, param, patch, post, put, requestBody,
   response
 } from '@loopback/rest';
+import fetch from 'cross-fetch';
 import {Propietario} from '../models';
 import {PropietarioRepository} from '../repositories';
+import {AutenticacionService} from '../services/autenticacion.service';
 
 export class PropietarioController {
   constructor(
     @repository(PropietarioRepository)
     public propietarioRepository: PropietarioRepository,
-  ) { }
+
+    @service(AutenticacionService)
+    public autententicacionService: AutenticacionService
+  ) {
+
+  }
 
   @post('/propietarios')
   @response(200, {
@@ -37,7 +45,14 @@ export class PropietarioController {
     })
     propietario: Omit<Propietario, 'id'>,
   ): Promise<Propietario> {
-    return this.propietarioRepository.create(propietario);
+    let prop = this.autententicacionService.cifrarClave(propietario.clave);
+    prop = await this.propietarioRepository.create(prop);
+
+    // enviar la notificacion por email al propietario con sus credenciales
+    fetch('http://localhost:5000/enviar-correo?mensaje=Inscripción al sistema Inmobiliario&asunto=Inscrito al sistema InmoAPi&correo=' + prop.correo)
+      .then((response) => console.log(`Notificación enviada: ${prop.correo}`));
+
+    return prop;
   }
 
   @get('/propietarios/count')
