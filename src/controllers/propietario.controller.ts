@@ -27,6 +27,18 @@ export class PropietarioController {
 
   }
 
+  @post('/validar-acceso')
+  @response(200, {
+    description: 'Validar las crendeciales del usuario',
+  })
+  async validarAcceso() {
+    return 'Se va a validar el acceso';
+  }
+
+
+
+
+
   @post('/propietarios')
   @response(200, {
     description: 'Propietario model instance',
@@ -45,11 +57,21 @@ export class PropietarioController {
     })
     propietario: Omit<Propietario, 'id'>,
   ): Promise<Propietario> {
-    let prop = this.autententicacionService.cifrarClave(propietario.clave);
-    prop = await this.propietarioRepository.create(prop);
+    //ESta acción es mientras generamos el front y desde el fron la clave ya debe encriptada
+    //let prop = this.autententicacionService.cifrarClave(propietario.clave);
+
+    let prop = await this.propietarioRepository.create(propietario);
+
+    let notificacion = {
+      correo: prop.correo,
+      asunto: 'Inmobilida MINTIC - Proceso de inscripción',
+      mensaje: 'Bienvenido a la inmobiliaria MINTIC 2022'
+    }
+
+    let url_servicio_correo = 'http://localhost:5000/enviar-correo?';
 
     // enviar la notificacion por email al propietario con sus credenciales
-    fetch('http://localhost:5000/enviar-correo?mensaje=Inscripción al sistema Inmobiliario&asunto=Inscrito al sistema InmoAPi&correo=' + prop.correo)
+    fetch(`${url_servicio_correo}correo=${notificacion.correo}&asunto=${notificacion.asunto}&mensaje=${notificacion.mensaje}`)
       .then((response) => console.log(`Notificación enviada: ${prop.correo}`));
 
     return prop;
