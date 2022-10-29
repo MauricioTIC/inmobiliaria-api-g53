@@ -36,9 +36,6 @@ export class PropietarioController {
   }
 
 
-
-
-
   @post('/propietarios')
   @response(200, {
     description: 'Propietario model instance',
