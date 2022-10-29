@@ -13,6 +13,7 @@ import {
 } from '@loopback/rest';
 import fetch from 'cross-fetch';
 import {Propietario} from '../models';
+import {Credenciales} from '../models/credenciales.model';
 import {PropietarioRepository} from '../repositories';
 import {AutenticacionService} from '../services/autenticacion.service';
 
@@ -31,8 +32,21 @@ export class PropietarioController {
   @response(200, {
     description: 'Validar las crendeciales del usuario',
   })
-  async validarAcceso() {
-    return 'Se va a validar el acceso';
+  async validarAcceso(
+    @requestBody() credenciales: Credenciales
+  ) {
+    let prop = await this.autententicacionService.validarAcceso(credenciales.usuario, credenciales.clave);
+    if (prop) {
+      let token = this.autententicacionService.generarTokenJWT(prop);
+      return {
+        datos: {
+          id: prop.id,
+          nombre: `${prop.nombres} ${prop.apellidos}`,
+          correo: prop.correo
+        },
+        token: token
+      }
+    }
   }
 
 

@@ -1,30 +1,105 @@
+import {authenticate} from '@loopback/authentication';
+import {service} from '@loopback/core';
 import {
   Count,
   CountSchema,
   Filter,
   FilterExcludingWhere,
   repository,
-  Where,
+  Where
 } from '@loopback/repository';
 import {
-  post,
-  param,
-  get,
-  getModelSchemaRef,
-  patch,
-  put,
-  del,
-  requestBody,
-  response,
+  del, get,
+  getModelSchemaRef, param, patch, post, put, requestBody,
+  response
 } from '@loopback/rest';
 import {Inmueble} from '../models';
 import {InmuebleRepository} from '../repositories';
+import {InmuebleService} from '../services/inmueble.service';
 
+@authenticate("admin")
 export class InmuebleController {
   constructor(
     @repository(InmuebleRepository)
-    public inmuebleRepository : InmuebleRepository,
-  ) {}
+    public inmuebleRepository: InmuebleRepository,
+    @service(InmuebleService)
+    public inmuebleService: InmuebleService
+  ) { }
+
+  // consultar los la lista de inmuebles en estado . 'A'
+  @authenticate.skip()
+  @get('/inmuebles-disponibles')
+  @response(200, {
+    description: 'Consulta la lista de inmuebles disponibles',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'array',
+          items: getModelSchemaRef(Inmueble, {includeRelations: true}),
+        },
+      },
+    },
+  })
+  async inmueblesDisponiblesParaArriendo() {
+    return this.inmuebleService.getInmueblesDisponibles();
+  }
+
+  @authenticate.skip()
+  @get('/inmuebles-precio-mayor-a/{valor}')
+  @response(200, {
+    description: 'Consulta la lista de inmuebles con un precio mayor A $$$$',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'array',
+          items: getModelSchemaRef(Inmueble, {includeRelations: true}),
+        },
+      },
+    },
+  })
+  async inmueblesConPrecioMayorA(
+    @param.path.number('valor') valor: number
+  ) {
+    return this.inmuebleService.getInmueblesPorPrecioMayorA(valor);
+  }
+
+  @authenticate.skip()
+  @get('/inmuebles-precio-menor-a/{valor}')
+  @response(200, {
+    description: 'Consulta la lista de inmuebles con un precio menor A $$$$',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'array',
+          items: getModelSchemaRef(Inmueble, {includeRelations: true}),
+        },
+      },
+    },
+  })
+  async inmueblesConPrecioMenorA(
+    @param.path.number('valor') valor: number
+  ) {
+    return this.inmuebleService.getInmueblesPorPrecioMenorA(valor);
+  }
+
+  @authenticate.skip()
+  @get('/inmuebles-por-barrio/{barrio}')
+  @response(200, {
+    description: 'Consulta la lista de inmuebles con un precio menor A $$$$',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'array',
+          items: getModelSchemaRef(Inmueble, {includeRelations: true}),
+        },
+      },
+    },
+  })
+  async inmueblesPorBarrio(
+    @param.path.string('barrio') barrio: string
+  ) {
+    return this.inmuebleService.getInmueblesPorBarrio(barrio);
+  }
 
   @post('/inmuebles')
   @response(200, {
@@ -58,6 +133,7 @@ export class InmuebleController {
     return this.inmuebleRepository.count(where);
   }
 
+  @authenticate.skip()
   @get('/inmuebles')
   @response(200, {
     description: 'Array of Inmueble model instances',
